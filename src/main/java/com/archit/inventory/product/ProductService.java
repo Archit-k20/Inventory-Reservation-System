@@ -4,6 +4,8 @@ import com.archit.inventory.common.ConflictException;
 import com.archit.inventory.common.NotFoundException;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,5 +35,10 @@ public class ProductService {
         return productRepository.findById(id)
                 .map(ProductResponse::from)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> list(Pageable pageable) {
+        return productRepository.findAll(pageable).map(ProductResponse::from);
     }
 }

@@ -17,6 +17,9 @@ load-tests/results/
 load-tests/*.json
 load-tests/*.csv
 
+### Frontend visual checks ###
+frontend/dashboard-check.png
+
 ### STS ###
 .apt_generated
 .classpath

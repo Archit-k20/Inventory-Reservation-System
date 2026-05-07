@@ -40,6 +40,7 @@ The application is designed to protect this rule even when many requests arrive 
 | Testing | JUnit 5, Mockito, Testcontainers, Spring Boot integration tests |
 | Load Testing | k6 |
 | Local Infra | Docker Compose |
+| Frontend | React, TypeScript, Vite, Lucide icons |
 
 ## Architecture
 
@@ -153,6 +154,12 @@ The project contains:
 | `GET` | `/actuator/prometheus` | Expose Prometheus metrics |
 | `GET` | `/swagger-ui.html` | Open Swagger UI |
 
+### Demo APIs
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/demo/orders/{reservationId}/fail` | Publish an `order.failed` Kafka event for local dashboard demos |
+
 ## How To Run Locally
 
 ### Prerequisites
@@ -223,6 +230,38 @@ Expected result:
   "status": "UP"
 }
 ```
+
+## Running the Frontend Dashboard
+
+The project includes a React dashboard inside the `frontend/` folder.
+
+The dashboard is a simple demo console for the backend. It lets you:
+
+- Create products
+- View stock levels
+- Reserve stock
+- Retry a reservation with the same idempotency key
+- Confirm or release reservations
+- View created orders
+- Simulate an `order.failed` Kafka event
+
+Start the backend first, then open a second terminal.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:5173
+```
+
+Simple explanation:
+
+The frontend does not replace Postman or Swagger. It makes the backend behavior easier to understand visually during demos and interviews.
 
 ## Sample API Requests
 
@@ -364,7 +403,11 @@ Kafka event shape:
 }
 ```
 
-Send a test event using Docker:
+You can trigger this in two ways.
+
+Option 1: use the dashboard's Kafka Event Demo panel.
+
+Option 2: send a test event using Docker:
 
 ```bash
 echo '{"reservationId":"RESERVATION_ID","reason":"payment_failed"}' | docker run --rm -i --network inventory-system_default apache/kafka:3.9.0 /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka:9093 --topic order.failed
@@ -386,6 +429,14 @@ reservedStock becomes lower
 Simple explanation:
 
 The Inventory service does not need another service to directly call its release API. It reacts to an event and updates stock by itself.
+
+For the dashboard, the local demo endpoint publishes this event:
+
+```http
+POST /demo/orders/{reservationId}/fail
+```
+
+This endpoint is meant for local demos so the browser can trigger the Kafka flow without needing direct Kafka access.
 
 ## Running Tests
 
@@ -416,6 +467,15 @@ On macOS/Linux:
 ```
 
 These tests use Testcontainers to start a real PostgreSQL database for integration testing.
+
+### Frontend Build
+
+```bash
+cd frontend
+npm run build
+```
+
+This verifies the React TypeScript dashboard compiles successfully.
 
 ## Load Testing
 
@@ -458,6 +518,7 @@ This project demonstrates backend engineering skills that are more advanced than
 - Implementing idempotency for safe client retries
 - Using Redis caching while keeping cached data fresh after writes
 - Using Kafka for event-driven communication between services
+- Building a small React dashboard to demonstrate backend workflows visually
 - Managing database schema changes with Flyway
 - Adding production-style observability with Actuator, Prometheus metrics, and JSON logs
 - Writing unit, integration, and concurrency tests
@@ -468,6 +529,7 @@ This project demonstrates backend engineering skills that are more advanced than
 You can adapt these directly for your resume:
 
 - Built a Spring Boot inventory reservation backend with PostgreSQL, Redis, Kafka, Flyway, and Docker Compose.
+- Built a React TypeScript dashboard to demonstrate product stock, reservation lifecycle, order creation, and Kafka failure simulation.
 - Implemented concurrency-safe stock reservation using PostgreSQL pessimistic row locking to prevent overselling under high traffic.
 - Added idempotency-key support to make reservation retries safe and avoid duplicate stock deductions.
 - Integrated Redis caching for product reads with cache eviction after reservation, confirmation, release, and expiry flows.
@@ -482,4 +544,3 @@ Possible next improvements:
 - Add authentication and role-based access control
 - Add CI pipeline with GitHub Actions
 - Add a small dashboard for inventory and reservation monitoring
-

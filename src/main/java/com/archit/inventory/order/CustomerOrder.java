@@ -58,4 +58,24 @@ public class CustomerOrder {
     public UUID getOrderId() {
         return orderId;
     }
+
+    public Reservation getReservation() {
+        return reservation;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public long getQuantity() {
+        return quantity;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

@@ -11,7 +11,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
@@ -36,5 +39,11 @@ public class ProductController {
     @GetMapping("/{id}")
     public ProductResponse get(@PathVariable UUID id) {
         return productService.get(id);
+    }
+
+    @Operation(summary = "List products", description = "Retrieve a paginated list of products.")
+    @GetMapping
+    public Page<ProductResponse> listProducts(@Parameter(hidden = true) Pageable pageable) {
+        return productService.list(pageable);
     }
 }

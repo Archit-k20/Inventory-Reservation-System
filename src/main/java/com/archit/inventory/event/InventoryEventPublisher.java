@@ -40,4 +40,12 @@ public class InventoryEventPublisher {
                 kv("productId", event.productId()),
                 kv("sku", event.sku()));
     }
+
+    public void publishOrderFailed(OrderFailedEvent event) {
+        kafkaTemplate.send(KafkaTopicConfig.ORDER_FAILED_TOPIC, event.reservationId().toString(), event);
+        log.info("Published OrderFailedEvent",
+                kv("topic", KafkaTopicConfig.ORDER_FAILED_TOPIC),
+                kv("reservationId", event.reservationId()),
+                kv("reason", event.reason()));
+    }
 }

@@ -21,7 +21,7 @@ public class OrderController {
 
     @Operation(summary = "List orders", description = "Retrieve a paginated list of all customer orders.")
     @GetMapping
-    public Page<CustomerOrder> listOrders(@Parameter(hidden = true) Pageable pageable) {
-        return orderRepository.findAll(pageable);
+    public Page<OrderResponse> listOrders(@Parameter(hidden = true) Pageable pageable) {
+        return orderRepository.findAll(pageable).map(OrderResponse::from);
     }
 }
