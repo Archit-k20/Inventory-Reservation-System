@@ -2,12 +2,13 @@ import { Copy, PackageCheck } from 'lucide-react';
 import type { Product } from '../api/types';
 
 type ProductTableProps = {
+  dataNote?: string;
   products: Product[];
   selectedProductId: string;
   onSelect: (productId: string) => void;
 };
 
-export function ProductTable({ products, selectedProductId, onSelect }: ProductTableProps) {
+export function ProductTable({ dataNote, products, selectedProductId, onSelect }: ProductTableProps) {
   return (
     <section className="panel table-panel">
       <div className="panel-heading">
@@ -17,6 +18,7 @@ export function ProductTable({ products, selectedProductId, onSelect }: ProductT
         </div>
         <PackageCheck size={20} />
       </div>
+      {dataNote ? <p className="data-note" role="status">{dataNote}</p> : null}
       <div className="table-wrap">
         <table>
           <thead>
@@ -63,7 +65,7 @@ export function ProductTable({ products, selectedProductId, onSelect }: ProductT
             {products.length === 0 ? (
               <tr>
                 <td colSpan={7} className="empty-cell">
-                  No products yet.
+                  {dataNote || 'No products yet.'}
                 </td>
               </tr>
             ) : null}

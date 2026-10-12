@@ -19,9 +19,9 @@ export function Header({ health, loading, onRefresh }: HeaderProps) {
       <div className="header-actions">
         <div className={`health-pill ${isUp ? 'health-up' : 'health-down'}`}>
           <Activity size={16} />
-          <span>{health?.status ?? 'CHECKING'}</span>
+          <span>{health?.status ?? (loading ? 'CHECKING' : 'UNKNOWN')}</span>
         </div>
-        <button className="icon-button" type="button" onClick={onRefresh} title="Refresh dashboard">
+        <button className="icon-button" type="button" onClick={onRefresh} disabled={loading} title="Refresh dashboard">
           <RefreshCw size={18} className={loading ? 'spin' : ''} />
         </button>
       </div>

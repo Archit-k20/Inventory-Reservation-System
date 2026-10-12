@@ -432,3 +432,6 @@ select:focus {
     flex-wrap: wrap;
   }
 }
+
+.data-note { margin-bottom: 12px; color: #9a6700; font-size: .9rem; }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }

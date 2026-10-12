@@ -1,8 +1,8 @@
-import { request } from './client';
-import type { CreateProductRequest, Page, Product } from './types';
+import { request, requestAll } from './client';
+import type { CreateProductRequest, Product } from './types';
 
 export function listProducts() {
-  return request<Page<Product>>('/products?size=100&sort=sku,asc');
+  return requestAll<Product>('/products?size=100&sort=sku,asc', (item) => item.id);
 }
 
 export function createProduct(payload: CreateProductRequest) {

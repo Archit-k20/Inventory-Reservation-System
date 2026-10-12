@@ -11,6 +11,9 @@ import java.util.UUID;
 public interface ProductRepository extends JpaRepository<Product, UUID> {
     boolean existsBySku(String sku);
 
+    @Query("select p.version from Product p where p.id = :id")
+    Optional<Long> findVersionById(UUID id);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")
     Optional<Product> findByIdForUpdate(UUID id);

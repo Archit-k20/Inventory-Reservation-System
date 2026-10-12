@@ -4,7 +4,7 @@ import type { FormEvent } from 'react';
 import type { CreateProductRequest } from '../api/types';
 
 type CreateProductFormProps = {
-  onCreate: (payload: CreateProductRequest) => Promise<void>;
+  onCreate: (payload: CreateProductRequest) => Promise<boolean>;
 };
 
 export function CreateProductForm({ onCreate }: CreateProductFormProps) {
@@ -17,7 +17,8 @@ export function CreateProductForm({ onCreate }: CreateProductFormProps) {
     event.preventDefault();
     setSubmitting(true);
     try {
-      await onCreate({ sku: sku.trim(), name: name.trim(), totalStock });
+      const created = await onCreate({ sku: sku.trim(), name: name.trim(), totalStock });
+      if (!created) return;
       setSku('');
       setName('');
       setTotalStock(10);
@@ -38,11 +39,11 @@ export function CreateProductForm({ onCreate }: CreateProductFormProps) {
       <form className="form-grid" onSubmit={handleSubmit}>
         <label>
           SKU
-          <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="SKU-1001" required />
+          <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="SKU-1001" maxLength={128} required />
         </label>
         <label>
           Name
-          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Wireless Keyboard" required />
+          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Wireless Keyboard" maxLength={255} required />
         </label>
         <label>
           Total stock

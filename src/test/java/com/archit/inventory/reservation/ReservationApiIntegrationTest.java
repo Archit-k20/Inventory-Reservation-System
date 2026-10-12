@@ -238,6 +238,30 @@ class ReservationApiIntegrationTest extends AbstractIntegrationTest {
         assertThat(releaseResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
+    @Test
+    void rejectsOversizedUserId() {
+        var product = createProduct("SKU-" + UUID.randomUUID(), 5);
+        var response = restTemplate.postForEntity(url("/reservations"),
+                new ReserveInventoryRequest(product.id(), "X".repeat(129), 1), ProblemDetail.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertStock(getProduct(product.id()), 5, 5, 0, 0);
+    }
+
+    @Test
+    void demoReportsQueuedRatherThanPublishedAndValidatesReservation() {
+        var product = createProduct("SKU-" + UUID.randomUUID(), 5);
+        var reservation = reserve(product.id(), "demo-user", 1);
+        var response = restTemplate.postForEntity(url("/demo/orders/" + reservation.reservationId() + "/fail"),
+                java.util.Map.of("reason", "payment_failed"), com.archit.inventory.demo.DemoOrderFailureResponse.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        assertThat(response.getBody().queued()).isTrue();
+        assertThat(response.getBody().published()).isFalse();
+        assertThat(response.getBody().eventId()).isNotNull();
+        var missing = restTemplate.postForEntity(url("/demo/orders/" + UUID.randomUUID() + "/fail"),
+                null, ProblemDetail.class);
+        assertThat(missing.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
     private ProductResponse createProduct(String sku, long stock) {
         ResponseEntity<ProductResponse> response = restTemplate.postForEntity(
                 url("/products"),

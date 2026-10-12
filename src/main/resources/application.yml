@@ -2,13 +2,19 @@ spring:
   application:
     name: inventory-system
   datasource:
-    url: jdbc:postgresql://localhost:5433/inventory_db
-    username: postgres
-    password: postgres
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/inventory_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 500ms
+      connect-timeout: 500ms
+  task:
+    scheduling:
+      pool:
+        size: 2
   cache:
     type: redis
   jpa:
@@ -22,8 +28,14 @@ spring:
   flyway:
     enabled: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.block.ms: 2000
+        request.timeout.ms: 2000
+        delivery.timeout.ms: 5000
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
@@ -40,7 +52,9 @@ spring:
 
 server:
   error:
-    include-message: always
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
 
 management:
   endpoints:
@@ -48,14 +62,19 @@ management:
       exposure:
         include: health,prometheus
       cors:
-        allowed-origins: "http://localhost:5173,http://127.0.0.1:5173"
+        allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
         allowed-methods: "GET,OPTIONS"
         allowed-headers: "*"
   endpoint:
     health:
-      show-details: always
+      show-details: ${HEALTH_SHOW_DETAILS:never}
 
 inventory:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  outbox:
+    poll-ms: 1000
+    batch-size: 25
+    ack-timeout: PT6S
   reservations:
     ttl: PT15M
     expiry-batch-size: 100

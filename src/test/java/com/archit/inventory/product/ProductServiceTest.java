@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 class ProductServiceTest {
     private final ProductRepository productRepository = mock(ProductRepository.class);
-    private final ProductService productService = new ProductService(productRepository);
+    private final ProductService productService = new ProductService(productRepository, new ProductSnapshotCache(productRepository));
 
     @Test
     void createRejectsDuplicateSku() {
@@ -28,6 +28,7 @@ class ProductServiceTest {
     @Test
     void getReturnsProduct() {
         UUID productId = UUID.randomUUID();
+        when(productRepository.findVersionById(productId)).thenReturn(Optional.of(0L));
         when(productRepository.findById(productId)).thenReturn(Optional.of(new Product(productId, "SKU-2", "Widget", 10)));
 
         ProductResponse response = productService.get(productId);
@@ -42,7 +43,7 @@ class ProductServiceTest {
     @Test
     void getRejectsUnknownProduct() {
         UUID productId = UUID.randomUUID();
-        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+        when(productRepository.findVersionById(productId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.get(productId))
                 .isInstanceOf(NotFoundException.class)

@@ -81,6 +81,17 @@ class ProductApiIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void rejectsOversizedFieldsWithoutExposingSql() {
+        for (var request : new CreateProductRequest[] {
+                new CreateProductRequest("X".repeat(129), "Widget", 1),
+                new CreateProductRequest("SKU-" + UUID.randomUUID(), "X".repeat(256), 1) }) {
+            var response = restTemplate.postForEntity(url("/products"), request, ProblemDetail.class);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().getDetail()).doesNotContain("insert into", "SQL", "character varying");
+        }
+    }
+
+    @Test
     void getRejectsUnknownProduct() {
         ResponseEntity<ProblemDetail> response = restTemplate.getForEntity(
                 url("/products/" + UUID.randomUUID()),

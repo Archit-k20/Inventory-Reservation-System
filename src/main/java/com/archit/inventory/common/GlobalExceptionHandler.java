@@ -28,8 +28,14 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
     }
 
-    @ExceptionHandler({ConflictException.class, DataIntegrityViolationException.class})
-    ProblemDetail handleConflict(Exception exception) {
+    @ExceptionHandler(ConflictException.class)
+    ProblemDetail handleConflict(ConflictException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ProblemDetail handleIntegrityConflict(DataIntegrityViolationException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "The request conflicts with an existing record or inventory constraint.");
     }
 }

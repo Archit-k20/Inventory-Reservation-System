@@ -10,14 +10,10 @@ import com.archit.inventory.order.CustomerOrder;
 import com.archit.inventory.order.OrderRepository;
 import com.archit.inventory.product.Product;
 import com.archit.inventory.product.ProductRepository;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -43,7 +39,6 @@ public class ReservationService {
     private final IdempotencyKeyRepository idempotencyKeyRepository;
     private final OrderRepository orderRepository;
     private final InventoryEventPublisher eventPublisher;
-    private final CacheManager cacheManager;
     private final Clock clock;
     private final Duration reservationTtl;
     private final int expiryBatchSize;
@@ -54,7 +49,6 @@ public class ReservationService {
             IdempotencyKeyRepository idempotencyKeyRepository,
             OrderRepository orderRepository,
             InventoryEventPublisher eventPublisher,
-            CacheManager cacheManager,
             Clock clock,
             MeterRegistry meterRegistry,
             @Value("${inventory.reservations.ttl:PT15M}") Duration reservationTtl,
@@ -65,7 +59,6 @@ public class ReservationService {
         this.idempotencyKeyRepository = idempotencyKeyRepository;
         this.orderRepository = orderRepository;
         this.eventPublisher = eventPublisher;
-        this.cacheManager = cacheManager;
         this.clock = clock;
         this.meterRegistry = meterRegistry;
         this.reservationTtl = reservationTtl;
@@ -151,7 +144,6 @@ public class ReservationService {
         Reservation saved = reservationRepository.save(reservation);
         
         meterRegistry.counter("reservations.created").increment();
-        evictProductCacheAfterCommit(product.getId());
         log.info("Reservation created", kv("reservationId", saved.getReservationId()), kv("productId", request.productId()), kv("quantity", request.quantity()));
 
         eventPublisher.publishReservationCreated(new ReservationCreatedEvent(
@@ -177,7 +169,6 @@ public class ReservationService {
         if (reservation.isExpired(now)) {
             product.release(reservation.getQuantity());
             reservation.markExpired();
-            evictProductCacheAfterCommit(product.getId());
             throw new ConflictException("Reservation has expired");
         }
 
@@ -186,7 +177,6 @@ public class ReservationService {
         CustomerOrder order = orderRepository.save(new CustomerOrder(UUID.randomUUID(), reservation));
         
         meterRegistry.counter("reservations.confirmed").increment();
-        evictProductCacheAfterCommit(product.getId());
         log.info("Reservation confirmed", kv("reservationId", reservationId), kv("orderId", order.getOrderId()));
 
         eventPublisher.publishReservationConfirmed(new ReservationConfirmedEvent(
@@ -208,7 +198,6 @@ public class ReservationService {
         reservation.markReleased();
         
         meterRegistry.counter("reservations.released").increment();
-        evictProductCacheAfterCommit(product.getId());
         log.info("Reservation released", kv("reservationId", reservationId));
         
         return ReservationResponse.from(reservation);
@@ -224,7 +213,6 @@ public class ReservationService {
             reservation.markReleased();
 
             meterRegistry.counter("reservations.released", "source", "order_failed_event").increment();
-            evictProductCacheAfterCommit(product.getId());
             log.info("Reservation released after order failure", kv("reservationId", reservationId));
             return ReservationResponse.from(reservation);
         }
@@ -248,7 +236,6 @@ public class ReservationService {
             reservation.markExpired();
             
             meterRegistry.counter("reservations.expired").increment();
-            evictProductCacheAfterCommit(product.getId());
             log.info("Reservation expired", kv("reservationId", reservation.getReservationId()));
         }
         return expiredReservations.size();
@@ -284,23 +271,4 @@ public class ReservationService {
         }
     }
 
-    private void evictProductCacheAfterCommit(UUID productId) {
-        Runnable eviction = () -> {
-            Cache cache = cacheManager.getCache("products");
-            if (cache != null) {
-                cache.evict(productId);
-            }
-        };
-
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    eviction.run();
-                }
-            });
-        } else {
-            eviction.run();
-        }
-    }
 }

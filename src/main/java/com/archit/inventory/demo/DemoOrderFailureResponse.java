@@ -6,6 +6,8 @@ public record DemoOrderFailureResponse(
         UUID reservationId,
         String event,
         String reason,
-        boolean published
+        boolean published,
+        boolean queued,
+        UUID eventId
 ) {
 }

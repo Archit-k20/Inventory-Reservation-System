@@ -7,7 +7,6 @@ import com.archit.inventory.order.OrderRepository;
 import com.archit.inventory.product.Product;
 import com.archit.inventory.product.ProductRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.cache.CacheManager;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -31,7 +30,6 @@ import com.archit.inventory.event.InventoryEventPublisher;
 
 class ReservationServiceTest {
     private final InventoryEventPublisher eventPublisher = mock(InventoryEventPublisher.class);
-    private final CacheManager cacheManager = mock(CacheManager.class);
     private final ProductRepository productRepository = mock(ProductRepository.class);
     private final ReservationRepository reservationRepository = mock(ReservationRepository.class);
     private final IdempotencyKeyRepository idempotencyKeyRepository = mock(IdempotencyKeyRepository.class);
@@ -44,7 +42,6 @@ class ReservationServiceTest {
             idempotencyKeyRepository,
             orderRepository,
             eventPublisher,
-            cacheManager,
             clock,
             meterRegistry,
             Duration.ofMinutes(15),

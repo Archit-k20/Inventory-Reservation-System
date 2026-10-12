@@ -2,10 +2,11 @@ import { ReceiptText } from 'lucide-react';
 import type { Order } from '../api/types';
 
 type OrderTableProps = {
+  dataNote?: string;
   orders: Order[];
 };
 
-export function OrderTable({ orders }: OrderTableProps) {
+export function OrderTable({ dataNote, orders }: OrderTableProps) {
   return (
     <section className="panel table-panel">
       <div className="panel-heading">
@@ -15,6 +16,7 @@ export function OrderTable({ orders }: OrderTableProps) {
         </div>
         <ReceiptText size={20} />
       </div>
+      {dataNote ? <p className="data-note" role="status">{dataNote}</p> : null}
       <div className="table-wrap">
         <table>
           <thead>
@@ -37,7 +39,7 @@ export function OrderTable({ orders }: OrderTableProps) {
             {orders.length === 0 ? (
               <tr>
                 <td colSpan={4} className="empty-cell">
-                  No orders yet.
+                  {dataNote || 'No orders yet.'}
                 </td>
               </tr>
             ) : null}

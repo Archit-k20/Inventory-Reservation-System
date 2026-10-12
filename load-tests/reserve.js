@@ -2,22 +2,26 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { randomString } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
 
+http.setResponseCallback(http.expectedStatuses(201, 409));
+
 export const options = {
-  stages: [
-    { duration: '30s', target: 50 }, // Ramp up to 50 users
-    { duration: '1m', target: 50 },  // Stay at 50 users for 1 min
-    { duration: '30s', target: 0 },  // Ramp down
-  ],
+  vus: Number(__ENV.VUS || 50),
+  duration: __ENV.DURATION || '2m',
   thresholds: {
     http_req_duration: ['p(95)<500', 'p(99)<1000'], // 95% of requests must complete below 0.5s, 99% below 1s
-    http_req_failed: ['rate<0.01'], // less than 1% errors
+    http_req_failed: ['rate<0.01'], // unexpected responses only; stock conflicts are expected
+    checks: ['rate==1'],
   },
 };
 
+export function setup() {
+  if (!__ENV.PRODUCT_ID) throw new Error('Set PRODUCT_ID to a product created for this load test.');
+}
+
 export default function () {
-  const url = 'http://localhost:8080/reservations';
+  const url = `${__ENV.BASE_URL || 'http://localhost:8080'}/reservations`;
   const payload = JSON.stringify({
-    productId: '8e6f393b-a6eb-4277-a449-faed76c6432e', // Replace with a valid test product ID
+    productId: __ENV.PRODUCT_ID,
     userId: 'user-' + randomString(8),
     quantity: 1,
   });
@@ -32,8 +36,7 @@ export default function () {
   const res = http.post(url, payload, params);
 
   check(res, {
-    'is status 201': (r) => r.status === 201,
-    'is status 409': (r) => r.status === 409, // 409 means insufficient stock, which is an expected business case if running out
+    'reserved or stock conflict': (r) => r.status === 201 || r.status === 409,
   });
 
   sleep(1);

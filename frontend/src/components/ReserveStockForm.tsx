@@ -17,7 +17,7 @@ function generateKey() {
 export function ReserveStockForm({ products, selectedProductId, onSelectProduct, onReserve }: ReserveStockFormProps) {
   const [userId, setUserId] = useState('user-1');
   const [quantity, setQuantity] = useState(1);
-  const [idempotencyKey, setIdempotencyKey] = useState(generateKey());
+  const [idempotencyKey, setIdempotencyKey] = useState(generateKey);
   const [submitting, setSubmitting] = useState(false);
 
   const selectedProduct = useMemo(
@@ -62,7 +62,7 @@ export function ReserveStockForm({ products, selectedProductId, onSelectProduct,
         </label>
         <label>
           User ID
-          <input value={userId} onChange={(event) => setUserId(event.target.value)} required />
+          <input maxLength={128} value={userId} onChange={(event) => setUserId(event.target.value)} required />
         </label>
         <label>
           Quantity
@@ -78,7 +78,7 @@ export function ReserveStockForm({ products, selectedProductId, onSelectProduct,
         <label className="key-field">
           Idempotency key
           <span>
-            <input value={idempotencyKey} onChange={(event) => setIdempotencyKey(event.target.value)} />
+            <input maxLength={255} value={idempotencyKey} onChange={(event) => setIdempotencyKey(event.target.value)} />
             <button type="button" className="icon-button" title="Generate idempotency key" onClick={() => setIdempotencyKey(generateKey())}>
               <KeyRound size={16} />
             </button>

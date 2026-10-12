@@ -11,8 +11,8 @@
 	<groupId>com.archit</groupId>
 	<artifactId>inventory-system</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>Inventory Reservation System</name>
+	<description>Concurrent inventory reservations with durable event delivery</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -113,6 +113,11 @@
 			<artifactId>postgresql</artifactId>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>kafka</artifactId>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 
 	<build>

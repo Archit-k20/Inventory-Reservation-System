@@ -1,6 +1,6 @@
-import { request } from './client';
-import type { Order, Page } from './types';
+import { requestAll } from './client';
+import type { Order } from './types';
 
 export function listOrders() {
-  return request<Page<Order>>('/orders?size=100&sort=createdAt,desc');
+  return requestAll<Order>('/orders?size=100&sort=createdAt,desc&sort=orderId,asc', (item) => item.orderId);
 }

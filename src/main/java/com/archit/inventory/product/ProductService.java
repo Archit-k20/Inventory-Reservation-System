@@ -2,8 +2,6 @@ package com.archit.inventory.product;
 
 import com.archit.inventory.common.ConflictException;
 import com.archit.inventory.common.NotFoundException;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,13 +12,14 @@ import java.util.UUID;
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final ProductSnapshotCache snapshots;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, ProductSnapshotCache snapshots) {
         this.productRepository = productRepository;
+        this.snapshots = snapshots;
     }
 
     @Transactional
-    @CachePut(value = "products", key = "#result.id()")
     public ProductResponse create(CreateProductRequest request) {
         if (productRepository.existsBySku(request.sku())) {
             throw new ConflictException("SKU already exists");
@@ -30,11 +29,10 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "products", key = "#id")
     public ProductResponse get(UUID id) {
-        return productRepository.findById(id)
-                .map(ProductResponse::from)
+        long version = productRepository.findVersionById(id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
+        return snapshots.get(id, version);
     }
 
     @Transactional(readOnly = true)

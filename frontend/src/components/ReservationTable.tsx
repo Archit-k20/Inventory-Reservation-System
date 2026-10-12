@@ -3,13 +3,14 @@ import type { Reservation } from '../api/types';
 import { StatusBadge } from './StatusBadge';
 
 type ReservationTableProps = {
+  dataNote?: string;
   reservations: Reservation[];
   onConfirm: (reservationId: string) => Promise<void>;
   onRelease: (reservationId: string) => Promise<void>;
   busyId: string;
 };
 
-export function ReservationTable({ reservations, onConfirm, onRelease, busyId }: ReservationTableProps) {
+export function ReservationTable({ dataNote, reservations, onConfirm, onRelease, busyId }: ReservationTableProps) {
   return (
     <section className="panel table-panel wide-panel">
       <div className="panel-heading">
@@ -19,6 +20,7 @@ export function ReservationTable({ reservations, onConfirm, onRelease, busyId }:
         </div>
         <RotateCcw size={20} />
       </div>
+      {dataNote ? <p className="data-note" role="status">{dataNote}</p> : null}
       <div className="table-wrap">
         <table>
           <thead>
@@ -34,7 +36,7 @@ export function ReservationTable({ reservations, onConfirm, onRelease, busyId }:
           <tbody>
             {reservations.map((reservation) => {
               const isActive = reservation.status === 'ACTIVE';
-              const isBusy = busyId === reservation.reservationId;
+              const isBusy = Boolean(busyId);
               return (
                 <tr key={reservation.reservationId}>
                   <td>
@@ -72,7 +74,7 @@ export function ReservationTable({ reservations, onConfirm, onRelease, busyId }:
             {reservations.length === 0 ? (
               <tr>
                 <td colSpan={6} className="empty-cell">
-                  No reservations yet.
+                  {dataNote || 'No reservations yet.'}
                 </td>
               </tr>
             ) : null}

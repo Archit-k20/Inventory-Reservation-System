@@ -5,7 +5,7 @@ import type { Reservation } from '../api/types';
 
 type KafkaDemoPanelProps = {
   reservations: Reservation[];
-  onSimulate: (reservationId: string, reason: string) => Promise<void>;
+  onSimulate: (reservationId: string, reason: string) => Promise<boolean>;
 };
 
 export function KafkaDemoPanel({ reservations, onSimulate }: KafkaDemoPanelProps) {
@@ -21,7 +21,8 @@ export function KafkaDemoPanel({ reservations, onSimulate }: KafkaDemoPanelProps
     }
     setSubmitting(true);
     try {
-      await onSimulate(reservationId, reason);
+      const queued = await onSimulate(reservationId, reason);
+      if (!queued) return;
       setReservationId('');
     } finally {
       setSubmitting(false);
@@ -33,7 +34,7 @@ export function KafkaDemoPanel({ reservations, onSimulate }: KafkaDemoPanelProps
       <div className="panel-heading">
         <div>
           <h2>Kafka Event Demo</h2>
-          <p>Publish an order.failed event and let the backend listener release stock asynchronously.</p>
+          <p>Queue an order.failed event and let the backend listener release stock asynchronously.</p>
         </div>
         <RadioTower size={20} />
       </div>
@@ -51,11 +52,11 @@ export function KafkaDemoPanel({ reservations, onSimulate }: KafkaDemoPanelProps
         </label>
         <label>
           Reason
-          <input value={reason} onChange={(event) => setReason(event.target.value)} required />
+          <input maxLength={255} value={reason} onChange={(event) => setReason(event.target.value)} required />
         </label>
         <button className="primary-button" type="submit" disabled={submitting || !reservationId}>
           <RadioTower size={16} />
-          {submitting ? 'Publishing' : 'Simulate Failure'}
+          {submitting ? 'Processing' : 'Simulate Failure'}
         </button>
       </form>
     </section>

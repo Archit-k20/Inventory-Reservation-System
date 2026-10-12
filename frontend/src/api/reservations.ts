@@ -1,8 +1,8 @@
-import { request } from './client';
-import type { Page, Reservation, ReserveInventoryRequest } from './types';
+import { request, requestAll } from './client';
+import type { Reservation, ReserveInventoryRequest } from './types';
 
 export function listReservations() {
-  return request<Page<Reservation>>('/reservations?size=100&sort=expiresAt,desc');
+  return requestAll<Reservation>('/reservations?size=100&sort=expiresAt,desc&sort=reservationId,asc', (item) => item.reservationId);
 }
 
 export function reserveStock(payload: ReserveInventoryRequest, idempotencyKey?: string) {

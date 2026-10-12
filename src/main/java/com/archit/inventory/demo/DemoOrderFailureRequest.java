@@ -1,6 +1,5 @@
 package com.archit.inventory.demo;
 
-public record DemoOrderFailureRequest(
-        String reason
-) {
-}
+import jakarta.validation.constraints.Size;
+
+public record DemoOrderFailureRequest(@Size(max = 255) String reason) { }

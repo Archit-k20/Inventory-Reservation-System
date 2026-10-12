@@ -1,51 +1,32 @@
 package com.archit.inventory.event;
 
 import com.archit.inventory.config.KafkaTopicConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.UUID;
 
 @Service
+@Transactional
 public class InventoryEventPublisher {
-    private static final Logger log = LoggerFactory.getLogger(InventoryEventPublisher.class);
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OutboxRepository outbox;
 
-    public InventoryEventPublisher(KafkaTemplate<String, Object> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
+    public InventoryEventPublisher(OutboxRepository outbox) {
+        this.outbox = outbox;
     }
 
     public void publishReservationCreated(ReservationCreatedEvent event) {
-        kafkaTemplate.send(KafkaTopicConfig.RESERVATION_CREATED_TOPIC, event.productId().toString(), event);
-        log.info("Published ReservationCreatedEvent",
-                kv("topic", KafkaTopicConfig.RESERVATION_CREATED_TOPIC),
-                kv("reservationId", event.reservationId()),
-                kv("productId", event.productId()));
+        outbox.enqueue(KafkaTopicConfig.RESERVATION_CREATED_TOPIC, event.productId().toString(), event);
     }
 
     public void publishReservationConfirmed(ReservationConfirmedEvent event) {
-        kafkaTemplate.send(KafkaTopicConfig.RESERVATION_CONFIRMED_TOPIC, event.productId().toString(), event);
-        log.info("Published ReservationConfirmedEvent",
-                kv("topic", KafkaTopicConfig.RESERVATION_CONFIRMED_TOPIC),
-                kv("reservationId", event.reservationId()),
-                kv("orderId", event.orderId()));
+        outbox.enqueue(KafkaTopicConfig.RESERVATION_CONFIRMED_TOPIC, event.productId().toString(), event);
     }
 
     public void publishOutOfStock(InventoryOutOfStockEvent event) {
-        kafkaTemplate.send(KafkaTopicConfig.OUT_OF_STOCK_TOPIC, event.productId().toString(), event);
-        log.warn("Published InventoryOutOfStockEvent",
-                kv("topic", KafkaTopicConfig.OUT_OF_STOCK_TOPIC),
-                kv("productId", event.productId()),
-                kv("sku", event.sku()));
+        outbox.enqueue(KafkaTopicConfig.OUT_OF_STOCK_TOPIC, event.productId().toString(), event);
     }
 
-    public void publishOrderFailed(OrderFailedEvent event) {
-        kafkaTemplate.send(KafkaTopicConfig.ORDER_FAILED_TOPIC, event.reservationId().toString(), event);
-        log.info("Published OrderFailedEvent",
-                kv("topic", KafkaTopicConfig.ORDER_FAILED_TOPIC),
-                kv("reservationId", event.reservationId()),
-                kv("reason", event.reason()));
+    public UUID publishOrderFailed(OrderFailedEvent event) {
+        return outbox.enqueue(KafkaTopicConfig.ORDER_FAILED_TOPIC, event.reservationId().toString(), event);
     }
 }
