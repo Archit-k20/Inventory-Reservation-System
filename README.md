@@ -13,7 +13,7 @@ with PostgreSQL transactions, Redis snapshots, and durable Kafka delivery.
 ![React](https://img.shields.io/badge/React-19-149ECA)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1)
 
-[Quick start](#quick-start) · [Screenshots](#screenshots) · [How it works](#how-it-works) · [API](#api-reference) · [Tests](#verification) · [Troubleshooting](#troubleshooting)
+[Quick start](#quick-start) · [Screenshots](#screenshots) · [How it works](#how-it-works) · [API](#api-reference) · [Tests](#verification) · [Troubleshooting](#operations-and-troubleshooting)
 
 </div>
 
@@ -43,7 +43,7 @@ Captured from the running application with local demonstration records. A fresh 
 
 - Git
 - Docker Engine with Docker Compose v2, or Docker Desktop, running with Linux containers
-- Node.js **24 LTS recommended**; minimum supported by this frontend is **22.12**
+- Node.js **24 LTS recommended**; supported versions are **22.13+ within Node 22**, **24.x**, or **26+**
 - Java **17+** only if running the backend outside Docker
 
 The Maven Wrapper is included. A separate Maven installation is unnecessary.
